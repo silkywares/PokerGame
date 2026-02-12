@@ -43,7 +43,6 @@ class Card
 
         return $"[{RankSymbol}{suitSymbol}]";
     }
-
     public void PrintCard()
     {
         switch (Suit)
@@ -195,17 +194,15 @@ class Player
     }
     
 }
-
 class Table
 {
-    public int Pot { get; private set; }
-    public int CurrentRound { get; private set; }
-    public List<Player> Players { get; private set; }
-    public List<Player> InPlayers { get; private set; }
-    public Dealer Dealer { get; private set; }
     enum RoundState { Preflop,Flop, Turn, River, Reset }
-    Player? winner;
     RoundState roundState;
+    public List<Player> Players { get; private set; }
+    List<Player> InPlayers { get; set; }
+    Dealer Dealer { get; set; }
+    public int Pot { get; private set; }
+    Player? winner;
     public Table(List<Player> players)
     {
         Players = players;
@@ -213,7 +210,6 @@ class Table
         roundState = RoundState.Preflop;
         Pot = 0;
         Dealer = new Dealer(Players);
-        
     }
     
     private void Roundflow()
@@ -287,19 +283,29 @@ class Table
             Reset();
         }
     }
-
     private void Reset()
     {
+        //pay winner and reset pot
         if(winner != null)
             winner.AddChips(Pot);
         Pot = 0;
         winner = null;
+        //clear hands and board
         foreach (Player p in Players)
             p.ClearHand();
         Dealer.ClearBoard();
+
         roundState = RoundState.Preflop;
     }
-
+    void AddPlayer(Player p)
+    {
+        if(Players.Count < 6)
+        {
+            Players.Add(p);
+        }
+        else
+            Console.Write("Table full");
+    }
 }
 class Program
 {
@@ -309,24 +315,25 @@ class Program
         Player p2 = new Player("Zxcv",2);
         Player p3 = new Player("Qwer",3);
         Player p4 = new Player("Sdfg",4);
+        Player p5 = new Player("Tyui",5);
 
         // (initialize names/chips if you want)
         List<Player> players = new List<Player> { p1, p2, p3 };
+        
+        Table table = new Table(players);
+        table.Dealer.DealPlayerCards();
+        table.Dealer.DealBoardCard();
+        table.Dealer.DealBoardCard();
+        table.Dealer.DealBoardCard();
 
-        // 2. Create dealer
-        Dealer dealer = new Dealer(players); // you'd need to pass players to Dealer
-
-        dealer.DealPlayerCards();
-
-        dealer.DealBoardCard();
-        dealer.DealBoardCard();
-        dealer.DealBoardCard();
-
+        
+        //print
         Console.Clear();
+
         //print board
         Console.ForegroundColor = ConsoleColor.DarkCyan;
         Console.Write("Board  :  ");
-        foreach (Card c in dealer.Board)
+        foreach (Card c in table.Dealer.Board)
         {
             c.PrintCard();
         }
@@ -344,6 +351,8 @@ class Program
             }
             Console.WriteLine();
         }
+    }
+}
 
  /*
           __________
@@ -358,6 +367,4 @@ class Program
 
         
      */       
-    }
-}
 
