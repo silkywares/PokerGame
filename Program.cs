@@ -146,35 +146,53 @@ class Dealer
         Board.Clear();
         Deck = NewDeck();
     }
-
     public void TestBoard()
     {
         Board.Clear();
-        Board.Add(new Card(Rank.Six, Suit.Diamonds));
-        Board.Add(new Card(Rank.Five, Suit.Hearts));
+        Board.Add(new Card(Rank.Four, Suit.Diamonds));
+        Board.Add(new Card(Rank.Ace, Suit.Hearts));
         Board.Add(new Card(Rank.Five, Suit.Spades));
-        Board.Add(new Card(Rank.Five, Suit.Clubs));
-        Board.Add(new Card(Rank.Six, Suit.Diamonds));
+        Board.Add(new Card(Rank.Four, Suit.Clubs));
+        Board.Add(new Card(Rank.Four, Suit.Diamonds));
     }
     public void TestHand()
     {
         Players[0].Hand.Clear();
-        Players[0].Hand.Add(new Card(Rank.Two, Suit.Diamonds));
+        Players[0].Hand.Add(new Card(Rank.Eight, Suit.Diamonds));
         Players[0].Hand.Add(new Card(Rank.Two, Suit.Diamonds));
     }
-
-
 }
 class Evaluator
 {
-    //List<Player> tempPlayer = new List<Player>();
-    public Player EvaluateBoard(List<Player>players,List<Card>board)
+    public class PlayerResult
     {
+        public Player Player { get; set; }
+        public HandEvaluation Evaluation { get; set; }
+        public PlayerResult(Player player)
+        {
+            Player = player;
+            Evaluation = new HandEvaluation();
+        }
+    }
+    public class HandEvaluation
+    {
+        public Rank Rank { get; set; }      // e.g. StraightFlush, FullHouse, etc.
+        public int PrimaryValue { get; set; }   // e.g. rank of the trips in a full house
+        public int SecondaryValue { get; set; } // e.g. rank of the pair in a full house
+        public List<int> Kickers { get; set; }  // remaining high cards sorted
+    }
+    public List<PlayerResult> EvaluateBoard(List<Player>players,List<Card>board)
+    {
+        List<PlayerResult> PlayerResults = new List<PlayerResult>();
+        foreach (Player p in players)
+        {
+            PlayerResult player = new PlayerResult(p);
+            PlayerResults.Add(player);
+        }
         //checkflush
         //checkstraight
-        //checkpair
-
-        return players[1];
+        CheckPair(players, board);
+        return PlayerResults;
     }
     void CheckFlush(List<Player>players,List<Card>board)
     {
@@ -184,75 +202,27 @@ class Evaluator
     {
         
     }
-    public static void CheckPair(List<Player>players,List<Card>board)
+
+    public static void CheckPair(List<Player> players, List<Card> board)
     {
-        List<Card> comp = new List<Card>();
-        int[,] pairs = new int[3,2];
-        int[,,] pairList = new int[players.Count,2,1];
+        // Combine player hand + board into one list
+        var comp = new List<Card>();
+        comp.AddRange(players[0].Hand);
+        comp.AddRange(board);
 
-        foreach (Card c in players[0].Hand)//add player cards to comp
-        {
-            comp.Add(c);
-        }
-        foreach (Card c in board)//adds board cards to comp
-        {
-            comp.Add(c);
-        }
+        // Group by rank
+        var groups = comp
+            .GroupBy(c => c.Rank)
+            .Select(g => new { Rank = g.Key, Count = g.Count() })
+            .Where(g => g.Count >= 2) // keep only actual pairs/trips/quads/etc
+            .OrderByDescending(g => g.Count)
+            .ToList();
 
-        int pairIndex = 0;
-        while(comp.Count > 1)//compares card ranks in comp
-        {
-            int i = comp.Count;
-            while (i > 1)
-            {
-                if(comp[0].Rank == comp[i-1].Rank)
-                {
-                    //initial pair found
-                    pairs[pairIndex,0] = (int)comp[0].Rank;
-                    pairs[pairIndex,1] = 2;
-                    
-                    //remove them from comp list
-                    int lastIndex = i - 1;
-                    comp.RemoveAt(lastIndex);
-                    comp.RemoveAt(0);
-                    
-                    i-=2;
-                    //do this loop once a pair has been found
-                    for(int k = comp.Count-1; k >= 0; k--) 
-                    {
-                        if((int)comp[k].Rank == pairs[pairIndex, 0])
-                        {
-                            pairs[pairIndex,1]++;
-                            comp.Remove(comp[k]); //killing kth element preserves the rest of the compairisons
-                            i--;
-                        }
-                    }
-                    pairIndex++;  
-                }
-                else
-                    i--; 
-            }
-            if(comp.Count >0)
-                comp.RemoveAt(0);
-        }
-
-        Console.ForegroundColor = ConsoleColor.DarkYellow;
-        Console.WriteLine($"Board pair index");
-        Console.WriteLine($"{pairs[0,0]} := {pairs[0,1]} ");
-        Console.WriteLine($"{pairs[1,0]} := {pairs[1,1]} ");
-        Console.WriteLine($"{pairs[2,0]} := {pairs[2,1]} ");
-        Console.ForegroundColor = ConsoleColor.White;
-
-        //display pair index
-        Console.ForegroundColor = ConsoleColor.DarkMagenta;
-        Console.WriteLine($"Player {players[0].Name} pair index");
-        //Console.WriteLine($"{pairList[0,0,0]} := {pairList[0,1,0]} ");
-        //Console.WriteLine($"{pairList[1,0,0]} := {pairList[1,1,0]} ");
-        Console.ForegroundColor = ConsoleColor.White;
+        // Now you can inspect results:
+        foreach (var g in groups)
+            Console.WriteLine($"{g.Rank}: {g.Count}");
     }
 }
-    
-
 class Player
 {
     public String Name;
@@ -350,8 +320,7 @@ class Table
                 Reset();
                 break;
             }
-        }
-        
+        } 
     }
     private void Preflop()
     {
@@ -424,7 +393,6 @@ class Table
 
         roundState = RoundState.Preflop;
     }
-    
 }
 class Program
 {
@@ -470,8 +438,8 @@ class Program
             }
             Console.WriteLine();
         }
-        
         Evaluator.CheckPair(players,table.Dealer.Board);
+        
     }
 }
 
