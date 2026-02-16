@@ -55,7 +55,9 @@ class Evaluator
     }
     public static HandEvaluation EvaluatePlayer(Player p, List<Card> board)
     {
-        var cards = p.Hand.Concat(board).ToList();
+        var cards = p.Hand.Concat(board)
+                            .OrderByDescending(c => c.Rank)
+                            .ToList();
 
         var rankGroups = cards.GroupBy(c => c.Rank)
                             .OrderByDescending(g => g.Count())
