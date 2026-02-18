@@ -1,5 +1,7 @@
 # PokerGame
 
+[![Coverage](https://img.shields.io/badge/Coverage-33%-red)](https://github.com/yourusername/PokerGame)
+
 ![PokerGame](docs/images/PokerGame.png)
 
 PokerGame contains a Texas Hold 'Em Poker engine with a console interface.
@@ -7,6 +9,7 @@ PokerGame contains a Texas Hold 'Em Poker engine with a console interface.
 ## Table of Contents <!-- omit in toc -->
 
 - [Quickstart](#quickstart)
+- [Run tests](#run-tests)
 - [Todo](#todo)
   - [Todo priority order](#todo-priority-order)
 
@@ -19,6 +22,20 @@ $ make run
 ```
 
 _Tip: `make` commands require a bash shell, (ex: [Git Bash](https://git-scm.com/install/windows) for Windows)._
+
+## Run tests
+
+Run the following command to trigger all unit tests:
+
+```bash
+$ make test
+```
+
+Run this command to trigger all unit tests, get a coverage console report, and update the coverage badge:
+
+```bash
+$ make coverage
+```
 
 ## Todo
 

@@ -1,2 +1,4 @@
 bin/
 obj/
+coveragereport/
+coverage.cobertura.xml
