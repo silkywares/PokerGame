@@ -114,11 +114,11 @@ public class Evaluator
             .ToList();
             
         if( topPlayers.Count>1)
-            topPlayers = SameHandRankTieBreak(topPlayers);
+            topPlayers = RankTieBreak(topPlayers);
 
         return topPlayers;
     }
-    public static List<PlayerResult> SameHandRankTieBreak(List<PlayerResult> results)
+    public static List<PlayerResult> RankTieBreak(List<PlayerResult> results)
     {
         var topPlayers = results;
         var maxPrimary = 0;
@@ -191,11 +191,11 @@ public class Evaluator
         }
 
         if (topPlayers.Count > 1)
-            topPlayers = BreakTie(topPlayers);
+            topPlayers = LeftoverTieBreak(topPlayers);
 
         return topPlayers;
     }
-    public static List<PlayerResult> BreakTie(List<PlayerResult> results)
+    public static List<PlayerResult> LeftoverTieBreak(List<PlayerResult> results)
     {
         var winners = new List<PlayerResult>(results);
 
