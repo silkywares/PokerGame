@@ -39,7 +39,7 @@ class Program
             var winner = Evaluator.EvaluateWinner(results);
 
 
-            if (winner[0].Player.Name == "Mom " && winner[0].Evaluation.Rank == 8 && winner[0].Evaluation.PrimaryValue == 14)
+            if (winner.Count > 0 && winner[0].Player.Name == "Mom " && winner[0].Evaluation.Rank == 8 && winner[0].Evaluation.PrimaryValue == 14)
                 flag = false;
             times++;
         }
