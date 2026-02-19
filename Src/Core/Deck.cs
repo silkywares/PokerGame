@@ -6,7 +6,7 @@ public class Deck
     public Deck()
     {
         cards = new List<Card>();
-        // populate the deck
+
         foreach (Suit suit in Enum.GetValues(typeof(Suit)))
         {
             foreach (Rank rank in Enum.GetValues(typeof(Rank)))
@@ -16,7 +16,7 @@ public class Deck
         }
     }
 
-    public void Shuffle()//This probably needs to be done a couple times for a better randomization
+    public void Shuffle()
     {
         Random rng = new Random();
         int n = cards.Count;
