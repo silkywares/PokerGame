@@ -146,10 +146,10 @@ public class Evaluator
                 break;
             case (int)HandRank.FullHouse: // eval second pair
                 maxPrimary = results.Max(p => p.Evaluation.PrimaryValue);
-                maxSecondary = results.Max(p => p.Evaluation.SecondaryValue);
                 topPlayers = topPlayers
                     .Where(c => c.Evaluation.PrimaryValue == maxPrimary)
                     .ToList();
+                maxSecondary = results.Max(p => p.Evaluation.SecondaryValue);
                 topPlayers = topPlayers
                     .Where(c => c.Evaluation.SecondaryValue == maxSecondary)
                     .ToList();
@@ -168,10 +168,10 @@ public class Evaluator
                 break;
             case (int)HandRank.TwoPair:
                 maxPrimary = results.Max(p => p.Evaluation.PrimaryValue);
-                maxSecondary = results.Max(p => p.Evaluation.SecondaryValue);
                 topPlayers = topPlayers
                     .Where(c => c.Evaluation.PrimaryValue == maxPrimary)
                     .ToList();
+                maxSecondary = results.Max(p => p.Evaluation.SecondaryValue);
                 topPlayers = topPlayers
                     .Where(c => c.Evaluation.SecondaryValue == maxSecondary)
                     .ToList();
