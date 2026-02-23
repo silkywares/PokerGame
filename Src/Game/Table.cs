@@ -7,6 +7,7 @@ public class Table
     public List<Player> Players { get; private set; }
     List<Player> InPlayers { get; set; }
     public Dealer Dealer { get; private set; }
+    public RoundEngine RoundEngine {get; set;}
     public int Pot { get; private set; }
     int SmallBlind = 5;
     int BBPosition;
@@ -18,6 +19,7 @@ public class Table
         roundState = RoundState.Preflop;
         Pot = 0;
         Dealer = new Dealer(Players);
+        RoundEngine = new RoundEngine(Players,5);
         BBPosition = 0;
     }
     void AddPlayer(Player p)
@@ -30,30 +32,7 @@ public class Table
             Console.Write("Table full");
     }
     
-    private void Roundflow()
-    {
-        while(Players.Count > 1)
-        {
-            switch (roundState)
-            {
-            case RoundState.Preflop:
-                Preflop();
-                break;
-            case RoundState.Flop:
-                Flop();
-                break;
-            case RoundState.Turn:
-                Turn();
-                break;
-            case RoundState.River:
-                River();
-                break;
-            case RoundState.Reset:
-                Reset();
-                break;
-            }
-        } 
-    }
+    
     private void Preflop()
     {
         Dealer.DealPlayerCards();
