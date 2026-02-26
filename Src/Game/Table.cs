@@ -2,25 +2,21 @@ namespace PokerGame;
 
 public class Table
 {
-    enum RoundState { Preflop, Flop, Turn, River, Reset }
-    RoundState roundState;
-    public List<Player> Players { get; private set; }
-    List<Player> InPlayers { get; set; }
-    public Dealer Dealer { get; private set; }
     public RoundEngine RoundEngine {get; set;}
-    public int Pot { get; private set; }
-    int SmallBlind = 5;
-    int BBPosition;
-    Player? winner;
+    public List<Player> Players { get; private set; }
+    public Dealer Dealer { get; private set; }
+    public int Pot { get; set; }
+    public int ButtonPosition{get; set;}
+    public int SmallBlind { get; }
+    public int BigBlind => SmallBlind * 2;
     public Table(List<Player> players)
     {
         Players = players;
-        InPlayers = new List<Player>(Players);
-        roundState = RoundState.Preflop;
         Pot = 0;
-        Dealer = new Dealer(Players);
-        RoundEngine = new RoundEngine(Players,5);
-        BBPosition = 0;
+        Dealer = new Dealer();
+        RoundEngine = new RoundEngine(this);
+        ButtonPosition = 0;
+        SmallBlind = 1;
     }
     void AddPlayer(Player p)
     {
@@ -32,77 +28,27 @@ public class Table
             Console.Write("Table full");
     }
     
-    
-    private void Preflop()
+    public void ShowColoredPlayerOrder(int pos)
     {
-        Dealer.DealPlayerCards();
-        foreach(Player player in Players)
-            player.outflag = false;
-        
-        Players[BBPosition].RemoveChips(SmallBlind*2);
-        if(BBPosition == 0)
-            Players[Players.Count()].RemoveChips(SmallBlind);
-        else
-            Players[BBPosition-1].RemoveChips(SmallBlind);
-        Betting();
-        roundState = RoundState.Flop;
-    }
-    private void Flop()
-    {
-        Dealer.DealBoardCards();
-        Betting();
-        roundState = RoundState.Turn;
-    }
-    private void Turn()
-    {
-        Dealer.DealBoardCards();
-        Betting();
-        roundState = RoundState.River;
-    }
-    private void River()
-    {
-        Dealer.DealBoardCards();
-        Betting();
-        roundState = RoundState.Reset;
-    }
-    private void Betting()
-    {
-        //loop for when there are still people betting? this aint right
-        if(InPlayers.Count > 1)
+        if(Players.Count >= pos)//check highlighted index is within player size
         {
-            foreach (Player p in InPlayers) //I think this control structure needs to be refactored so that it flows with seat position
-            {
-                p.PromptAction();
-
-                if (p.outflag)
-                {
-                    InPlayers.Remove(p);
-                }
-            }
+            int highlightPos = pos*3-3;
+            Console.Write("p1 p2 p3 p4 p5 p6");
+            var cursorPos = Console.GetCursorPosition();
+            Console.SetCursorPosition(cursorPos.Left-17+highlightPos, cursorPos.Top);
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.BackgroundColor = ConsoleColor.DarkMagenta;
+            Console.Write($"p{pos}");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.SetCursorPosition(0, cursorPos.Top+1);  
         }
-
-        if (InPlayers.Count == 1)
-        {
-            winner = InPlayers[0];
-            Reset();
-        }
-    }
-    private void Reset()
-    {
-        //pay winner and reset pot
-        if(winner != null)
-            winner.AddChips(Pot);
-        Pot = 0;
-        winner = null;
-        //clear hands and board
         
-        if (BBPosition++ == Players.Count())
-            BBPosition = 0;
-        foreach (Player p in Players)
-            p.ClearHand();
-        Dealer.ClearBoard();
+    }
+    public void UpdatePot()
+    {
+        Console.SetCursorPosition(8, 5);
 
-        roundState = RoundState.Preflop;
     }
     public void PrintTable()
     {
@@ -127,5 +73,13 @@ public class Table
             }
             Console.WriteLine();
         }
+        
+        Console.ForegroundColor = ConsoleColor.DarkGreen;
+        Console.WriteLine($"***{RoundEngine.roundState}***");
+        Console.WriteLine($"Pot: {Pot}");
+        Console.ForegroundColor = ConsoleColor.Gray;
+
+        //var currentplayer = RoundEngine.turnIndex;
+        ShowColoredPlayerOrder(1);
     }
 }

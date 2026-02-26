@@ -7,7 +7,8 @@ public class Player
     public int CurrentBet { get; set; }
     public int SeatPosition;
     public List<Card> Hand { get; private set; }
-    public bool outflag = true;
+    public bool IsFolded { get; set; }
+    public bool IsAllIn {get; set;}
     public void AddCard(Card card)
     {
         Hand.Add(card);

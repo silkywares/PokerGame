@@ -4,12 +4,10 @@ public class Dealer
 {
     
     private Deck Deck;//change back to private
-    public List<Player> Players;
     public List<Card> Board { get; private set; }
-    public Dealer(List<Player> players)
+    public Dealer()
     {
         Deck = NewDeck();
-        Players = players;
         Board = new List<Card>();
     }
     private Deck NewDeck()
@@ -18,13 +16,13 @@ public class Dealer
         deck.Shuffle();
         return deck;
     }
-    public void DealPlayerCards()
+    public void DealPlayerCards(List<Player> players)
     {
         for(int i=0; i<2; i++)
         {
-            foreach(Player player in Players)
+            foreach(Player p in players)
             {
-            player.AddCard(Deck.Deal());
+            p.AddCard(Deck.Deal());
             }
         }
     }
@@ -43,10 +41,10 @@ public class Dealer
         else
             Console.Write("Board full!");
     }
-    public void ClearBoard()
+    public void ClearBoard(List<Player> players)
     {
         Board.Clear();
-        foreach (Player p in Players)
+        foreach (Player p in players)
             p.Hand.Clear();
         Deck = NewDeck();
     }
@@ -59,13 +57,13 @@ public class Dealer
         Board.Add(new Card(Rank.Four, Suit.Diamonds));
         Board.Add(new Card(Rank.Two, Suit.Diamonds));
     }
-    public void TestHand()
+    public void TestHand(List<Player> players)
     {
-        Players[0].Hand.Clear();
-        Players[0].Hand.Add(new Card(Rank.Eight, Suit.Diamonds));
-        Players[0].Hand.Add(new Card(Rank.Two, Suit.Diamonds));
+        players[0].Hand.Clear();
+        players[0].Hand.Add(new Card(Rank.Eight, Suit.Diamonds));
+        players[0].Hand.Add(new Card(Rank.Two, Suit.Diamonds));
     }
-    public void TestOneMillion()
+    public void TestOneMillion(List<Player> players)
     {
        int[] handRankCounts = new int[10]; 
 
@@ -74,14 +72,14 @@ public class Dealer
         for (int i = 0; i < simulations; i++)
         {
             
-            DealPlayerCards();
+            DealPlayerCards(players);
             DealBoardCards();
             DealBoardCards();
             DealBoardCards();
 
-            foreach (var player in Players)
+            foreach (var p in players)
             {
-                var eval = Evaluator.EvaluatePlayer(player, Board);
+                var eval = Evaluator.EvaluatePlayer(p, Board);
 
                 // check for Royal Flush
                 if (eval.Rank == 8 && eval.PrimaryValue == 14) // Ace-high straight flush
@@ -94,7 +92,7 @@ public class Dealer
                 }
             }
 
-            ClearBoard();
+            ClearBoard(players);
         }
 
         // Print results

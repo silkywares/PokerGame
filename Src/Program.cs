@@ -17,29 +17,13 @@ class Program
 
         // (initialize names/chips if you want)
         List<Player> players = new List<Player> { p1, p2, p3, p4, p5 };
-        List<Evaluator.PlayerResult> winners = new List<Evaluator.PlayerResult>();
         Table table = new Table(players);
-        //table.Dealer.TestBoard();
-        //table.Dealer.TestHand();
+        table.RoundEngine = new RoundEngine(table);
 
-        foreach (Player p in players)
-            p.Hand.Clear();
-        table.Dealer.ClearBoard();
 
-        //table.Dealer.DealBoardCards();
-        //table.Dealer.DealBoardCards();
-        //table.Dealer.DealBoardCards();
-        table.Dealer.DealPlayerCards();
-
-            
-
-        List<Evaluator.PlayerResult> results = Evaluator.EvaluateBoard(players, table.Dealer.Board);
-        var winner = Evaluator.EvaluateWinner(results);
-        //winners = winner;
-        
         table.PrintTable();
-        table.RoundEngine.CurrentBet = 20;
-        table.RoundEngine.OfferPlayerActions(p1);
+        table.RoundEngine.Roundflow();
+
     }
 }
 
