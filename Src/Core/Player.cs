@@ -9,6 +9,7 @@ public class Player
     public List<Card> Hand { get; private set; }
     public bool IsFolded { get; set; }
     public bool IsAllIn {get; set;}
+    public bool HasActedThisRound {get; set;}
     public void AddCard(Card card)
     {
         Hand.Add(card);
@@ -31,9 +32,9 @@ public class Player
     public void RemoveChips(int chips)
     {
         if(chips >= ChipCount)
-            ChipCount -= chips;
-        else
             ChipCount = 0;
+        else
+            ChipCount -= chips;
     }
     public void BetChips(int chips)
     {

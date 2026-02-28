@@ -16,12 +16,10 @@ class Program
         Player p5 = new Player("Sky ", 5, 100);
 
         // (initialize names/chips if you want)
-        List<Player> players = new List<Player> { p1, p2, p3, p4, p5 };
+        List<Player> players = new List<Player> { p1, p2};
         Table table = new Table(players);
         table.RoundEngine = new RoundEngine(table);
 
-
-        table.PrintTable();
         table.RoundEngine.Roundflow();
 
     }

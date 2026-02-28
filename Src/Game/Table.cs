@@ -16,7 +16,7 @@ public class Table
         Dealer = new Dealer();
         RoundEngine = new RoundEngine(this);
         ButtonPosition = 0;
-        SmallBlind = 1;
+        SmallBlind = 2;
     }
     void AddPlayer(Player p)
     {
@@ -53,6 +53,10 @@ public class Table
     public void PrintTable()
     {
         Console.Clear();
+        Console.ForegroundColor = ConsoleColor.DarkGreen;
+        Console.WriteLine($"***{RoundEngine.roundState}*** Pot: {Pot}");
+        Console.ForegroundColor = ConsoleColor.Gray;
+
         Console.ForegroundColor = ConsoleColor.DarkCyan;
         Console.Write("Board  :  ");
         foreach (Card c in Dealer.Board)
@@ -65,7 +69,7 @@ public class Table
         foreach (Player p in Players)
         {
             Console.ForegroundColor = ConsoleColor.Blue;
-            Console.Write($"{p.SeatPosition}-{p.Name} :  ");
+            Console.Write($"{p.Name}({p.ChipCount}) :  ");
             
             foreach (Card c in p.Hand)
             {
@@ -74,12 +78,9 @@ public class Table
             Console.WriteLine();
         }
         
-        Console.ForegroundColor = ConsoleColor.DarkGreen;
-        Console.WriteLine($"***{RoundEngine.roundState}***");
-        Console.WriteLine($"Pot: {Pot}");
-        Console.ForegroundColor = ConsoleColor.Gray;
+        
 
         //var currentplayer = RoundEngine.turnIndex;
-        ShowColoredPlayerOrder(1);
+        //ShowColoredPlayerOrder(RoundEngine.turnIndex);
     }
 }

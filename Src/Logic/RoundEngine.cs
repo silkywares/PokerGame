@@ -144,8 +144,9 @@ public class RoundEngine
     public bool AllBetsEqual()
     {
         var active = GetActivePlayers();
-        int bet = active[0].CurrentBet;
-        return active.All(p => p.CurrentBet == bet); // this LINQ call returns true if predicate is true for all list memebers (all p.currentBet == bet)
+        // Only consider players who haven't folded or are all-in
+        int targetBet = CurrentBet;
+        return active.All(p => p.CurrentBet == targetBet || p.IsAllIn);
     }
     public void PostBlinds()
     {
@@ -158,8 +159,12 @@ public class RoundEngine
         var bbPlayer = Table.Players[BBPosition];
 
         //take the blinds
-        PlayerRaise(sbPlayer, Table.SmallBlind);
-        PlayerRaise(bbPlayer, Table.BigBlind);
+        sbPlayer.RemoveChips(Table.SmallBlind);
+        bbPlayer.RemoveChips(Table.BigBlind);
+        Table.Pot += Table.BigBlind+Table.SmallBlind;
+        Console.WriteLine($"Small: {sbPlayer.Name} posts {Table.SmallBlind} POT:{Table.Pot}");
+        Console.WriteLine($"Big: {bbPlayer.Name} posts {Table.BigBlind} POT:{Table.Pot}");
+
 
         //Ensure proper minbet logic right after the blinds
         LastRaiseAmount = Table.BigBlind;
@@ -172,35 +177,73 @@ public class RoundEngine
         LastRaiseAmount = 0;
 
         foreach (var p in Table.Players)
+        {
             p.CurrentBet = 0;
+            p.HasActedThisRound = false;
+        }
     }
     private void StartBettingRound(RoundState street)
     {
 
-        firstToAct = GetFirstToAct(street); // computes index based on button/BB
-        turnIndex = firstToAct; 
+        Console.WriteLine($"Begin {street} betting round");
 
-        while(true)
+        // Reset who has acted
+        foreach (var p in Table.Players)
+            p.HasActedThisRound = false;
+
+        // Determine first to act
+        firstToAct = GetFirstToAct(street); // preflop: UTG after BB, postflop: left of button
+        turnIndex = firstToAct;
+
+        while (true)
         {
             var active = GetActivePlayers();
+
+            // Only one player left -> showdown
             if (active.Count == 1)
             {
+                Console.WriteLine("Only one active player remaining, going to showdown");
                 roundState = RoundState.Showdown;
-                return;// all else folded
-            }
-            if (AllBetsEqual()) 
-            {
-                break; // normal end of betting round
+                return;
             }
 
-            var currentPlayer = active[turnIndex % active.Count];
-            //OfferPlayerActions(currentPlayer);
-            ProcessRandomAction(currentPlayer);
-            turnIndex++;
+            var currentPlayer = Table.Players[turnIndex];
+
+            // Skip folded or all-in players
+            if (!currentPlayer.IsFolded && !currentPlayer.IsAllIn)
+            {
+                ProcessRandomAction(currentPlayer); // call, raise, fold, etc.
+                currentPlayer.HasActedThisRound = true;
+            }
+
+            // Check if betting round is finished:
+            // 1. All active players’ bets equal CurrentBet or they are all-in
+            // 2. Everyone has acted at least once since last raise
+            if (active.All(p => p.CurrentBet == CurrentBet || p.IsAllIn) &&
+                active.All(p => p.HasActedThisRound || p.IsAllIn))
+            {
+                break; // end of betting round
+            }
+
+            // Move to next active player
+            turnIndex = GetNextActivePlayerIndex(turnIndex);
         }
+
+        Console.WriteLine($"{street} betting round complete");
+    }
+    private int GetNextActivePlayerIndex(int idx)
+    {
+        int count = Table.Players.Count;
+        do {
+            idx = (idx + 1) % count;
+        }
+        while (Table.Players[idx].IsFolded || Table.Players[idx].IsAllIn);
+
+        return idx;
     }
     public void AllocatePot()
     {
+        Console.WriteLine("Allocating Pot");
         var active = GetActivePlayers();
         if(active.Count == 0) return;
         if(active.Count == 1)// skip eval if just one person left
@@ -218,9 +261,13 @@ public class RoundEngine
         }
         int share = Table.Pot / winners.Count;
 
-        foreach (Evaluator.PlayerResult pr in winners)//add the chips to winners
+        Console.WriteLine($"Pot: {Table.Pot} Winner(s) are ");
+
+        foreach (Evaluator.PlayerResult pr in winners){//add the chips to winners
+            Console.Write($"{pr.Player.Name} ");
             pr.Player.AddChips(share);
-    }  
+        }
+    }
     public void Reset()
     {
         Table.Dealer.ClearBoard(Table.Players);
@@ -239,51 +286,57 @@ public class RoundEngine
 
     public void Roundflow()
     {
-        while(true)
+        int x = 0;
+        while(x < 15)
         {
-
             switch (roundState)
             {
             case RoundState.Preflop:
                 Table.Dealer.DealPlayerCards(Table.Players);
-                ResetStreetBets();
                 PostBlinds();
-                Console.WriteLine($"{roundState} {Table.Pot}");
-                StartBettingRound(RoundState.Preflop);
+                Table.PrintTable();
                 roundState = RoundState.Flop;
+                StartBettingRound(RoundState.Preflop);
+                Thread.Sleep(3000);
                 break;
             case RoundState.Flop:
                 Table.Dealer.DealBoardCards();
-                Console.WriteLine($"{roundState} {Table.Pot}");
-                ResetStreetBets();
-                StartBettingRound(RoundState.Flop);
+                Table.PrintTable();
+                ResetStreetBets();                
                 roundState = RoundState.Turn;
+                StartBettingRound(RoundState.Flop);
+                Thread.Sleep(5000);
                 break;
             case RoundState.Turn:
                 Table.Dealer.DealBoardCards();
-                Console.WriteLine($"{roundState} {Table.Pot}");
+                Table.PrintTable();
                 ResetStreetBets();
-                StartBettingRound(RoundState.Turn);
                 roundState = RoundState.River;
+                StartBettingRound(RoundState.Turn);
+                Thread.Sleep(5000);
                 break;
             case RoundState.River:
                 Table.Dealer.DealBoardCards();
-                Console.WriteLine($"{roundState} {Table.Pot}");
+                Table.PrintTable();
                 ResetStreetBets();
-                StartBettingRound(RoundState.River);
                 roundState = RoundState.Showdown;
+                StartBettingRound(RoundState.River);
+                Thread.Sleep(5000);
                 break;
             case RoundState.Showdown:
-                Console.WriteLine($"{roundState} {Table.Pot}");
                 AllocatePot();
                 roundState = RoundState.Reset;
+                Thread.Sleep(5000);
                 break;
             case RoundState.Reset:
-                Console.WriteLine($"{roundState} {Table.Pot}");
+                Console.WriteLine($"{roundState}");
                 Reset();
+                Table.PrintTable();
                 roundState = RoundState.Preflop;
+                Thread.Sleep(5000);
                 break;
             }
+        x++;    
         } 
     }
     
@@ -299,15 +352,15 @@ public class RoundEngine
         {
             case PlayerAction.Fold:
                 PlayerFold(player);
-                Console.WriteLine($"{player.Name} folds pc{player.ChipCount}");
+                Console.WriteLine($"{player.Name} folds ChipCount:{player.ChipCount}");
                 break;
 
             case PlayerAction.Call: // includes check if toCall = 0
                 PlayerCall(player);
                 if (CurrentBet == player.CurrentBet)
-                    Console.WriteLine($"{player.Name} calls {choice.Amount}  pc{player.ChipCount} !{Table.Pot}");
+                    Console.WriteLine($"{player.Name} calls {choice.Amount}.  ChipCount:{player.ChipCount} Pot:{Table.Pot}");
                 else
-                    Console.WriteLine($"{player.Name} checks pc{player.ChipCount} {Table.Pot} ");
+                    Console.WriteLine($"{player.Name} checks. ChipCount:{player.ChipCount} Pot:{Table.Pot} ");
                 break;
 
             case PlayerAction.Raise: // includes all-in if player doesn't have enough chips
@@ -327,10 +380,10 @@ public class RoundEngine
                 int raiseAmount = rnd.Next(min, max + 1);
 
                 PlayerRaise(player, raiseAmount);
-                Console.WriteLine($"{player.Name} raises {raiseAmount} pc{player.ChipCount} {Table.Pot}");
+                Console.WriteLine($"{player.Name} raises {raiseAmount}. ChipCount{player.ChipCount} Pot:{Table.Pot}");
                 break;
         }
 
-        Thread.Sleep(1500); // delay so you can watch step by step
+        Thread.Sleep(4000); // delay so you can watch step by step
     }
 }
