@@ -2,7 +2,7 @@ namespace PokerGame;
 
 public class RoundEngine
 {
-    public enum RoundState { Preflop, Flop, Turn, River, Reset, Showdown}
+    public enum RoundState { Preflop, Flop, Turn, River, Reset, Showdown, CannotStart}
     public enum PlayerAction  {Call, Raise, Fold, Check, AllIn};
 
     public int turnIndex{get; set;} // current actioning player
@@ -14,7 +14,8 @@ public class RoundEngine
 
     public RoundEngine(Table table)
     {
-        roundState = RoundState.Preflop;
+        roundState = RoundState.CannotStart;
+
         Table = table;
     }
     
@@ -117,7 +118,7 @@ public class RoundEngine
     
     private List<Player> GetActivePlayers()
     {
-        return Table.Players.Where(p => !p.IsFolded && !p.IsAllIn).ToList();
+        return Table.Players.Where(p => !p.IsFolded && !p.IsAllIn && p.ChipCount > Table.SmallBlind).ToList();
     }
     private int GetFirstToAct(RoundState street)
     {
@@ -162,26 +163,17 @@ public class RoundEngine
         sbPlayer.RemoveChips(Table.SmallBlind);
         bbPlayer.RemoveChips(Table.BigBlind);
         Table.Pot += Table.BigBlind+Table.SmallBlind;
+
+        Console.ForegroundColor = ConsoleColor.Magenta;
         Console.WriteLine($"Small: {sbPlayer.Name} posts {Table.SmallBlind} POT:{Table.Pot}");
         Console.WriteLine($"Big: {bbPlayer.Name} posts {Table.BigBlind} POT:{Table.Pot}");
-
+        Console.ForegroundColor = ConsoleColor.Gray;
 
         //Ensure proper minbet logic right after the blinds
         LastRaiseAmount = Table.BigBlind;
         CurrentBet = Table.BigBlind;
     }
     
-    private void ResetStreetBets()
-    {
-        CurrentBet = 0;
-        LastRaiseAmount = 0;
-
-        foreach (var p in Table.Players)
-        {
-            p.CurrentBet = 0;
-            p.HasActedThisRound = false;
-        }
-    }
     private void StartBettingRound(RoundState street)
     {
 
@@ -211,8 +203,9 @@ public class RoundEngine
 
             // Skip folded or all-in players
             if (!currentPlayer.IsFolded && !currentPlayer.IsAllIn)
-            {
-                ProcessRandomAction(currentPlayer); // call, raise, fold, etc.
+            {   
+                ProcessManualAction(currentPlayer);
+                //ProcessRandomAction(currentPlayer);
                 currentPlayer.HasActedThisRound = true;
             }
 
@@ -231,6 +224,17 @@ public class RoundEngine
 
         Console.WriteLine($"{street} betting round complete");
     }
+    private void ResetStreetBets()
+    {
+        CurrentBet = 0;
+        LastRaiseAmount = 0;
+
+        foreach (var p in Table.Players)
+        {
+            p.CurrentBet = 0;
+            p.HasActedThisRound = false;
+        }
+    }    
     private int GetNextActivePlayerIndex(int idx)
     {
         int count = Table.Players.Count;
@@ -248,6 +252,7 @@ public class RoundEngine
         if(active.Count == 0) return;
         if(active.Count == 1)// skip eval if just one person left
         {
+            Console.WriteLine($"{active[0].Name} wins {Table.Pot} chips. Last standing");
             active[0].AddChips(Table.Pot);
             Table.Pot = 0;
             return;
@@ -264,7 +269,8 @@ public class RoundEngine
         Console.WriteLine($"Pot: {Table.Pot} Winner(s) are ");
 
         foreach (Evaluator.PlayerResult pr in winners){//add the chips to winners
-            Console.Write($"{pr.Player.Name} ");
+            Console.Write($"{pr.Player.Name} wins with {pr.Evaluation.Rank}! ");
+            Thread.Sleep(10000);
             pr.Player.AddChips(share);
         }
     }
@@ -283,18 +289,42 @@ public class RoundEngine
         p.IsAllIn = false;
         }
     }
+    public bool CannotStart()
+    {
+        string[] dots = { ".  ", ".. ", "..." };
+        int index = 0;
 
+        var minChipsToPlaceBlinds = Table.Players.Where(p => p.ChipCount >= Table.SmallBlind);
+        while (true)
+        {
+            int playersWithChips = Table.Players.Count(p => p.ChipCount >= Table.SmallBlind);
+
+            if (Table.Players.Count >= 2 && playersWithChips >= 2)
+                return false; // Game can start
+
+            Console.Write($"\rWaiting for enough players to continue{dots[index]}");
+            index = (index + 1) % dots.Length;
+            Thread.Sleep(700);
+        }
+    }
     public void Roundflow()
     {
         int x = 0;
-        while(x < 15)
+        while(x < 10)
         {
             switch (roundState)
             {
-            case RoundState.Preflop:
-                Table.Dealer.DealPlayerCards(Table.Players);
-                PostBlinds();
+            case RoundState.CannotStart:
+                Console.WriteLine($"{roundState}");
                 Table.PrintTable();
+                CannotStart();
+                roundState = RoundState.Preflop;
+                Thread.Sleep(1000);
+                break; 
+            case RoundState.Preflop:
+                Table.Dealer.DealPlayerCards(GetActivePlayers());
+                Table.PrintTable();
+                PostBlinds();
                 roundState = RoundState.Flop;
                 StartBettingRound(RoundState.Preflop);
                 Thread.Sleep(3000);
@@ -339,7 +369,76 @@ public class RoundEngine
         x++;    
         } 
     }
-    
+    private void ProcessManualAction(Player player)
+    {
+        var options = GetRoundActions(player);
+        if (options.Count == 0) return;
+
+        Console.WriteLine($"\n--- ACTION FOR {player.Name} ---");
+        Console.WriteLine($"CurrentBet: {CurrentBet} | PlayerBet: {player.CurrentBet} | Chips: {player.ChipCount}");
+        Console.WriteLine($"Pot: {Table.Pot}");
+        Console.WriteLine("Available actions:");
+
+        for (int i = 0; i < options.Count; i++)
+        {
+            var o = options[i];
+            string extra = o.Action == PlayerAction.Raise ? $" (Min:{o.MinAmount}, Max:{o.MaxAmount})" : "";
+            Console.WriteLine($"{i}: {o.Action}{extra}");
+        }
+
+        // Get user choice
+        int choiceIndex = -1;
+        while (choiceIndex < 0 || choiceIndex >= options.Count)
+        {
+            Console.Write("Pick an action index: ");
+            string input = Console.ReadLine();
+            int.TryParse(input, out choiceIndex);
+        }
+
+        var choice = options[choiceIndex];
+
+        // Execute
+        switch (choice.Action)
+        {
+            case PlayerAction.Fold:
+                PlayerFold(player);
+                Console.WriteLine($"{player.Name} folds. Chips:{player.ChipCount}");
+                break;
+
+            case PlayerAction.Call:
+                PlayerCall(player);
+                if (CurrentBet == player.CurrentBet)
+                    Console.WriteLine($"{player.Name} calls {choice.Amount}. Chips:{player.ChipCount} Pot:{Table.Pot}");
+                else
+                    Console.WriteLine($"{player.Name} checks. Chips:{player.ChipCount} Pot:{Table.Pot}");
+                break;
+
+            case PlayerAction.Raise:
+
+                int min = Math.Max(choice.MinAmount, 1);
+                int max = choice.MaxAmount;
+
+                if (min > max)
+                {
+                    PlayerCall(player);
+                    Console.WriteLine($"{player.Name} calls instead (raise impossible)");
+                    break;
+                }
+
+                int raiseAmount = -1;
+                while (raiseAmount < min || raiseAmount > max)
+                {
+                    Console.Write($"Enter raise amount ({min}–{max}): ");
+                    int.TryParse(Console.ReadLine(), out raiseAmount);
+                }
+
+                PlayerRaise(player, raiseAmount);
+                Console.WriteLine($"{player.Name} raises {raiseAmount}. Chips:{player.ChipCount} Pot:{Table.Pot}");
+                break;
+        }
+
+        Console.WriteLine();
+    }
     private void ProcessRandomAction(Player player)
     {
         var options = GetRoundActions(player);

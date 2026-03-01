@@ -68,8 +68,17 @@ public class Table
         //print players
         foreach (Player p in Players)
         {
-            Console.ForegroundColor = ConsoleColor.Blue;
-            Console.Write($"{p.Name}({p.ChipCount}) :  ");
+            if(!p.IsFolded)
+            {
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.Write($"{p.Name}({p.ChipCount}) :  ");
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                Console.Write($"{p.Name}({p.ChipCount}) :  ");
+            }
+            
             
             foreach (Card c in p.Hand)
             {
@@ -78,7 +87,7 @@ public class Table
             Console.WriteLine();
         }
         
-        
+        Console.ForegroundColor = ConsoleColor.Gray;
 
         //var currentplayer = RoundEngine.turnIndex;
         //ShowColoredPlayerOrder(RoundEngine.turnIndex);
