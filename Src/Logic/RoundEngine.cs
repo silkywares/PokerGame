@@ -166,7 +166,7 @@ public class RoundEngine
 
         Console.ForegroundColor = ConsoleColor.Magenta;
         Console.WriteLine($"Small: {sbPlayer.Name} posts {Table.SmallBlind} POT:{Table.Pot}");
-        Console.WriteLine($"Big: {bbPlayer.Name} posts {Table.BigBlind} POT:{Table.Pot}");
+        Console.WriteLine($"Big  : {bbPlayer.Name} posts {Table.BigBlind} POT:{Table.Pot}");
         Console.ForegroundColor = ConsoleColor.Gray;
 
         //Ensure proper minbet logic right after the blinds
@@ -178,7 +178,6 @@ public class RoundEngine
     {
 
         Console.WriteLine($"Begin {street} betting round");
-
         // Reset who has acted
         foreach (var p in Table.Players)
             p.HasActedThisRound = false;
@@ -204,8 +203,8 @@ public class RoundEngine
             // Skip folded or all-in players
             if (!currentPlayer.IsFolded && !currentPlayer.IsAllIn)
             {   
+                Table.PrintTable();
                 ProcessManualAction(currentPlayer);
-                //ProcessRandomAction(currentPlayer);
                 currentPlayer.HasActedThisRound = true;
             }
 
@@ -221,8 +220,11 @@ public class RoundEngine
             // Move to next active player
             turnIndex = GetNextActivePlayerIndex(turnIndex);
         }
-
-        Console.WriteLine($"{street} betting round complete");
+        var pos = Console.GetCursorPosition();
+        Console.WriteLine($"End of {street}.");
+        Table.ClearBlock(7,10);
+        
+        Console.SetCursorPosition(pos.Left, pos.Top);
     }
     private void ResetStreetBets()
     {
@@ -288,6 +290,9 @@ public class RoundEngine
         p.IsFolded = false;
         p.IsAllIn = false;
         }
+        //check if round can start
+        if(GetActivePlayers().Count < 2)
+            roundState = RoundState.CannotStart;
     }
     public bool CannotStart()
     {
@@ -360,30 +365,42 @@ public class RoundEngine
                 break;
             case RoundState.Reset:
                 Console.WriteLine($"{roundState}");
+                roundState = RoundState.Preflop;
                 Reset();
                 Table.PrintTable();
-                roundState = RoundState.Preflop;
                 Thread.Sleep(5000);
                 break;
             }
         x++;    
         } 
     }
+
     private void ProcessManualAction(Player player)
     {
+        // Record cursor At the very top of the function
+
+        var startPos = Console.GetCursorPosition();
+        int blockHeight = 10; // 10 lines expected for input prompting
+
+        
+        // Clear previous block safely
+        Table.ClearBlock(startPos.Top, blockHeight);
+        Console.SetCursorPosition(startPos.Left, startPos.Top);
+
+        //calculate valid player options
         var options = GetRoundActions(player);
         if (options.Count == 0) return;
 
         Console.WriteLine($"\n--- ACTION FOR {player.Name} ---");
         Console.WriteLine($"CurrentBet: {CurrentBet} | PlayerBet: {player.CurrentBet} | Chips: {player.ChipCount}");
-        Console.WriteLine($"Pot: {Table.Pot}");
-        Console.WriteLine("Available actions:");
 
+        //print out options
         for (int i = 0; i < options.Count; i++)
         {
             var o = options[i];
-            string extra = o.Action == PlayerAction.Raise ? $" (Min:{o.MinAmount}, Max:{o.MaxAmount})" : "";
-            Console.WriteLine($"{i}: {o.Action}{extra}");
+            string raiseRange = o.Action == PlayerAction.Raise ? $" (Min:{o.MinAmount}, Max:{o.MaxAmount})" : "";
+            string callAmount = o.Action == PlayerAction.Call ? $" (toCall){o.Amount}" : "";
+            Console.WriteLine($"{i}: {o.Action}{callAmount}{raiseRange}");
         }
 
         // Get user choice
@@ -437,7 +454,9 @@ public class RoundEngine
                 break;
         }
 
-        Console.WriteLine();
+        // Reset Cursor location for the next option menu
+        
+        Console.SetCursorPosition(startPos.Left, startPos.Top);
     }
     private void ProcessRandomAction(Player player)
     {

@@ -9,6 +9,8 @@ public class Table
     public int ButtonPosition{get; set;}
     public int SmallBlind { get; }
     public int BigBlind => SmallBlind * 2;
+
+    public int playerLine;
     public Table(List<Player> players)
     {
         Players = players;
@@ -17,6 +19,7 @@ public class Table
         RoundEngine = new RoundEngine(this);
         ButtonPosition = 0;
         SmallBlind = 2;
+        playerLine = Players.Count +2;
     }
     void AddPlayer(Player p)
     {
@@ -28,68 +31,58 @@ public class Table
             Console.Write("Table full");
     }
     
-    public void ShowColoredPlayerOrder(int pos)
-    {
-        if(Players.Count >= pos)//check highlighted index is within player size
-        {
-            int highlightPos = pos*3-3;
-            Console.Write("p1 p2 p3 p4 p5 p6");
-            var cursorPos = Console.GetCursorPosition();
-            Console.SetCursorPosition(cursorPos.Left-17+highlightPos, cursorPos.Top);
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.BackgroundColor = ConsoleColor.DarkMagenta;
-            Console.Write($"p{pos}");
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.BackgroundColor = ConsoleColor.Black;
-            Console.SetCursorPosition(0, cursorPos.Top+1);  
-        }
-        
-    }
     public void UpdatePot()
     {
         Console.SetCursorPosition(8, 5);
-
     }
     public void PrintTable()
     {
+
+
         Console.Clear();
         Console.ForegroundColor = ConsoleColor.DarkGreen;
         Console.WriteLine($"***{RoundEngine.roundState}*** Pot: {Pot}");
         Console.ForegroundColor = ConsoleColor.Gray;
 
+        //draw board and board cards
         Console.ForegroundColor = ConsoleColor.DarkCyan;
-        Console.Write("Board  :  ");
+        Console.Write("Board     :  ");
         foreach (Card c in Dealer.Board)
-        {
             c.PrintCard();
-        }
+
         Console.WriteLine();
         
         //print players
-        foreach (Player p in Players)
+        for (int i = 0; i < Players.Count; i++)
         {
-            if(!p.IsFolded)
-            {
-                Console.ForegroundColor = ConsoleColor.Blue;
-                Console.Write($"{p.Name}({p.ChipCount}) :  ");
-            }
-            else
-            {
+            // Highlight current player directly
+            if (i == RoundEngine.turnIndex && !Players[i].IsFolded)
+                Console.BackgroundColor = ConsoleColor.DarkMagenta;
+            else if (Players[i].IsFolded)
                 Console.ForegroundColor = ConsoleColor.DarkGray;
-                Console.Write($"{p.Name}({p.ChipCount}) :  ");
-            }
-            
-            
-            foreach (Card c in p.Hand)
-            {
+            else
+                Console.ForegroundColor = ConsoleColor.Blue;
+
+            Console.Write($"{Players[i].Name}");
+            Console.ResetColor();
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.Write($"({Players[i].ChipCount}) :  ");
+            foreach (Card c in Players[i].Hand)
                 c.PrintCard();
-            }
-            Console.WriteLine();
+            Console.WriteLine();      
         }
         
-        Console.ForegroundColor = ConsoleColor.Gray;
+    }
 
-        //var currentplayer = RoundEngine.turnIndex;
-        //ShowColoredPlayerOrder(RoundEngine.turnIndex);
+    public void ClearBlock(int top, int height)
+    {
+        top = Math.Max(0, Math.Min(top, Console.BufferHeight - 1));
+        for (int i = 0; i < height; i++)
+        {
+            int line = top + i;
+            if (line >= Console.BufferHeight) break;
+            Console.SetCursorPosition(0, line);
+            Console.Write(new string(' ', Console.WindowWidth));
+        }
     }
 }
