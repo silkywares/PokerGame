@@ -10,6 +10,15 @@ public class Player
     public bool IsFolded { get; set; }
     public bool IsAllIn {get; set;}
     public bool HasActedThisRound {get; set;}
+
+    public Player(string name, int seat, int chips)
+    {
+        Hand = new List<Card>();
+        Name = name;
+        SeatPosition = seat;
+        ChipCount = chips;
+    }
+
     public void AddCard(Card card)
     {
         Hand.Add(card);
@@ -18,13 +27,7 @@ public class Player
     {
         Hand.Clear();
     }
-    public Player(string name, int seat, int chips)
-    {
-        Hand = new List<Card>();
-        Name = name;
-        SeatPosition = seat;
-        ChipCount = chips;
-    }
+
     public void AddChips(int chips)
     {
         ChipCount += chips;

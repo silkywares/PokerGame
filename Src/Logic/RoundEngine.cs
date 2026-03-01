@@ -4,7 +4,7 @@ public class RoundEngine
 {
     public enum RoundState { Preflop, Flop, Turn, River, Reset, Showdown, CannotStart}
     public enum PlayerAction  {Call, Raise, Fold, Check, AllIn};
-
+    public Interface Interface;
     public int turnIndex{get; set;} // current actioning player
     private int firstToAct;//first player to act in betting round
     private readonly Table Table;
@@ -15,8 +15,8 @@ public class RoundEngine
     public RoundEngine(Table table)
     {
         roundState = RoundState.CannotStart;
-
         Table = table;
+        Interface = new Interface(Table);
     }
     
     public class PlayerActionOption
@@ -203,7 +203,7 @@ public class RoundEngine
             // Skip folded or all-in players
             if (!currentPlayer.IsFolded && !currentPlayer.IsAllIn)
             {   
-                Table.PrintTable();
+                Interface.PrintTable();
                 ProcessManualAction(currentPlayer);
                 currentPlayer.HasActedThisRound = true;
             }
@@ -222,7 +222,7 @@ public class RoundEngine
         }
         var pos = Console.GetCursorPosition();
         Console.WriteLine($"End of {street}.");
-        Table.ClearBlock(7,10);
+        Interface.ClearBlock(7,10);
         
         Console.SetCursorPosition(pos.Left, pos.Top);
     }
@@ -321,14 +321,14 @@ public class RoundEngine
             {
             case RoundState.CannotStart:
                 Console.WriteLine($"{roundState}");
-                Table.PrintTable();
+                Interface.PrintTable();
                 CannotStart();
                 roundState = RoundState.Preflop;
                 Thread.Sleep(1000);
                 break; 
             case RoundState.Preflop:
                 Table.Dealer.DealPlayerCards(GetActivePlayers());
-                Table.PrintTable();
+                Interface.PrintTable();
                 PostBlinds();
                 roundState = RoundState.Flop;
                 StartBettingRound(RoundState.Preflop);
@@ -336,7 +336,7 @@ public class RoundEngine
                 break;
             case RoundState.Flop:
                 Table.Dealer.DealBoardCards();
-                Table.PrintTable();
+                Interface.PrintTable();
                 ResetStreetBets();                
                 roundState = RoundState.Turn;
                 StartBettingRound(RoundState.Flop);
@@ -344,7 +344,7 @@ public class RoundEngine
                 break;
             case RoundState.Turn:
                 Table.Dealer.DealBoardCards();
-                Table.PrintTable();
+                Interface.PrintTable();
                 ResetStreetBets();
                 roundState = RoundState.River;
                 StartBettingRound(RoundState.Turn);
@@ -352,7 +352,7 @@ public class RoundEngine
                 break;
             case RoundState.River:
                 Table.Dealer.DealBoardCards();
-                Table.PrintTable();
+                Interface.PrintTable();
                 ResetStreetBets();
                 roundState = RoundState.Showdown;
                 StartBettingRound(RoundState.River);
@@ -367,7 +367,7 @@ public class RoundEngine
                 Console.WriteLine($"{roundState}");
                 roundState = RoundState.Preflop;
                 Reset();
-                Table.PrintTable();
+                Interface.PrintTable();
                 Thread.Sleep(5000);
                 break;
             }
@@ -384,7 +384,7 @@ public class RoundEngine
 
         
         // Clear previous block safely
-        Table.ClearBlock(startPos.Top, blockHeight);
+        Interface.ClearBlock(startPos.Top, blockHeight);
         Console.SetCursorPosition(startPos.Left, startPos.Top);
 
         //calculate valid player options
