@@ -249,7 +249,7 @@ public class RoundEngine
     }
     public void AllocatePot()
     {
-        Console.WriteLine("Allocating Pot");
+        Console.WriteLine($"Allocating Pot({Table.Pot})");
         var active = GetActivePlayers();
         if(active.Count == 0) return;
         if(active.Count == 1)// skip eval if just one person left
@@ -268,13 +268,14 @@ public class RoundEngine
         }
         int share = Table.Pot / winners.Count;
 
-        Console.WriteLine($"Pot: {Table.Pot} Winner(s) are ");
+        Console.Write($"Winner(s): ");
 
         foreach (Evaluator.PlayerResult pr in winners){//add the chips to winners
-            Console.Write($"{pr.Player.Name} wins with {pr.Evaluation.Rank}! ");
-            Thread.Sleep(10000);
+            Console.Write($"{pr.Player.Name} with {Evaluator.rankNames[pr.Evaluation.Rank]}! ");
             pr.Player.AddChips(share);
         }
+        Interface.WaitForSpacebar();
+
     }
     public void Reset()
     {
@@ -314,8 +315,8 @@ public class RoundEngine
     }
     public void Roundflow()
     {
-        int x = 0;
-        while(x < 10)
+
+        while(true)
         {
             switch (roundState)
             {
@@ -332,7 +333,7 @@ public class RoundEngine
                 PostBlinds();
                 roundState = RoundState.Flop;
                 StartBettingRound(RoundState.Preflop);
-                Thread.Sleep(3000);
+                Thread.Sleep(1000);
                 break;
             case RoundState.Flop:
                 Table.Dealer.DealBoardCards();
@@ -340,7 +341,7 @@ public class RoundEngine
                 ResetStreetBets();                
                 roundState = RoundState.Turn;
                 StartBettingRound(RoundState.Flop);
-                Thread.Sleep(5000);
+                Thread.Sleep(1000);
                 break;
             case RoundState.Turn:
                 Table.Dealer.DealBoardCards();
@@ -348,7 +349,7 @@ public class RoundEngine
                 ResetStreetBets();
                 roundState = RoundState.River;
                 StartBettingRound(RoundState.Turn);
-                Thread.Sleep(5000);
+                Thread.Sleep(1000);
                 break;
             case RoundState.River:
                 Table.Dealer.DealBoardCards();
@@ -356,22 +357,21 @@ public class RoundEngine
                 ResetStreetBets();
                 roundState = RoundState.Showdown;
                 StartBettingRound(RoundState.River);
-                Thread.Sleep(5000);
+                Thread.Sleep(1000);
                 break;
             case RoundState.Showdown:
                 AllocatePot();
                 roundState = RoundState.Reset;
-                Thread.Sleep(5000);
+                Thread.Sleep(1000);
                 break;
             case RoundState.Reset:
                 Console.WriteLine($"{roundState}");
                 roundState = RoundState.Preflop;
                 Reset();
                 Interface.PrintTable();
-                Thread.Sleep(5000);
+                Thread.Sleep(1000);
                 break;
-            }
-        x++;    
+            }   
         } 
     }
 
@@ -391,17 +391,7 @@ public class RoundEngine
         var options = GetRoundActions(player);
         if (options.Count == 0) return;
 
-        Console.WriteLine($"\n--- ACTION FOR {player.Name} ---");
-        Console.WriteLine($"CurrentBet: {CurrentBet} | PlayerBet: {player.CurrentBet} | Chips: {player.ChipCount}");
-
-        //print out options
-        for (int i = 0; i < options.Count; i++)
-        {
-            var o = options[i];
-            string raiseRange = o.Action == PlayerAction.Raise ? $" (Min:{o.MinAmount}, Max:{o.MaxAmount})" : "";
-            string callAmount = o.Action == PlayerAction.Call ? $" (toCall){o.Amount}" : "";
-            Console.WriteLine($"{i}: {o.Action}{callAmount}{raiseRange}");
-        }
+        Interface.PrintPlayerOptions(player, options);
 
         // Get user choice
         int choiceIndex = -1;
