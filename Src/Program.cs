@@ -8,12 +8,12 @@ namespace PokerGame;
 
 class Program
 {
-    static void Main(string[] args)
+    static async Task Main(string[] args)
     {
 
         if (args.Contains("server"))
         {
-            Server.Start();
+            await Server.Start();
         }
         if (args.Contains("client"))
         {

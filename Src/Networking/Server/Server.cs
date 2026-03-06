@@ -6,74 +6,75 @@ namespace PokerGame;
 
 class Server
 {
-
-    public static void Start()
+    Table? Table;
+    TcpListener Listener;
+    int ActiveClients;
+    int Port;
+    public Server(int port)
     {
-        Console.WriteLine("Starting Server...");
-        int port = 5000;
-
-        TcpListener listener = new TcpListener(IPAddress.Any, port);
-        listener.Start();
-
+        ActiveClients = 0;
+        Port = port;
+        Listener = new TcpListener(IPAddress.Any, port);
+        Listener.Start();
         Console.WriteLine($"Server listening on port {port}");
 
-        while (true)
+    }
+    async Task HandleClient(TcpClient client)
+    {
+        var stream = client.GetStream();
+
+        byte[] buffer = new byte[1024];
+        int bytesRead = stream.Read(buffer, 0, buffer.Length);
+        string name = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+        
+        Console.WriteLine($"{name} connected.");
+        ActiveClients++;
+
+        try
         {
-            var client = listener.AcceptTcpClient();
-            var stream = client.GetStream();
-
-            
-            byte[] buffer = new byte[1024]; // reuse buffer for this client
-            
-            int bytesRead = stream.Read(buffer, 0, buffer.Length);
-            string name = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-            
-            Console.ForegroundColor = ConsoleColor.DarkCyan;
-            Console.WriteLine($"{name} connected.");
-
-            try
+            while (true)
             {
-                while (true) // handle messages from this client
-                {
-                    bytesRead = stream.Read(buffer, 0, buffer.Length);
+                bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+                if (bytesRead == 0) break; // client disconnected
 
-                    if (bytesRead == 0) // client disconnected normally
-                    {
-                        Console.WriteLine($"{name} disconnected normally.");
-                        break;
-                    }
+                string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                Console.WriteLine($"{name}: {message}");
 
-                    string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-
-                    Console.ForegroundColor = ConsoleColor.DarkCyan;
-                    Console.Write($"{name}: ");
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.WriteLine(message);
-
-                    // send response
-                    byte[] responseBytes = Encoding.UTF8.GetBytes("Received");
-                    stream.Write(responseBytes, 0, responseBytes.Length);
-                    
-                    if (message.Trim().ToLower() == "end")
-                        break; // client wants to end
-                }
-            }
-            catch (Exception e)
-            {
-                Console.ForegroundColor = ConsoleColor.DarkYellow;
-
-                Console.WriteLine($"{name} disconnected unexpectedly: " + e.Message);
-                Console.ForegroundColor = ConsoleColor.White;
-
-            }
-            finally
-            {
-                // ensure the client is always closed
-                Console.ForegroundColor = ConsoleColor.White;
-                stream.Close();
-                client.Close();
+                // send acknowledgement
+                byte[] response = Encoding.UTF8.GetBytes("Received");
+                await stream.WriteAsync(response, 0, response.Length);
             }
         }
-        
+        catch (Exception e)
+        {
+            Console.WriteLine($"{name} disconnected unexpectedly: {e.Message}");
+        }
+        finally
+        {
+            client.Close();
+            ActiveClients--;
+            Console.WriteLine($"{name} disconnected. Active clients: {ActiveClients}");
+        }
+    }
+    async Task ClientManager()
+    {
+        while (true)
+        {
+            TcpClient client = await Listener.AcceptTcpClientAsync();
+            // fire-and-forget handling of this client
+            if(ActiveClients < 6)
+                _ = HandleClient(client);
+        }
+    }
+    public async Task StartAsync()
+    {
+        Console.WriteLine("Server starting...");
+        await ClientManager();
+    }
+    public static async Task Start()
+    {
+        int port = 5000;
+        Server server = new Server(port);
+        await server.StartAsync();
     }
 }
