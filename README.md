@@ -40,6 +40,10 @@ $ make coverage
 ## Todo
 
 1. Design client/server architecture
+Client -> Server: "PlayerAction: Call"
+Server -> RoundEngine: Apply action
+RoundEngine -> Server: Updated table state
+Server -> Clients: Broadcast updated table state
 
 ### Todo priority order
 

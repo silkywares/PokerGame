@@ -1,13 +1,16 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using PokerGame;
 
 namespace Pokergame;
 
 class Client
 {
+    
     static TcpClient? client;
     static NetworkStream? stream;
+    //public Player Player {get; private set;}
     //static string? message;
     static void ConnectToServer(string name)
     {
@@ -19,6 +22,7 @@ class Client
 
         byte[] nameBytes = Encoding.UTF8.GetBytes(name);
         stream.Write(nameBytes, 0, nameBytes.Length);
+        
     }
     static void SendMessage(string message)
     {
