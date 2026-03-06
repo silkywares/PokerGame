@@ -39,30 +39,9 @@ $ make coverage
 
 ## Todo
 
-1. Fix and finalize game flow state machine
-
-2. Track active players properly
-
-   ```
-   public bool IsFolded { get; set; }
-   public int CurrentBet { get; set; }
-   ```
-
-3. Iplement player actions:
-   - Fold
-   - Check
-   - Call
-   - Raise
-
-4. Implement betting round loop (CORE ENGINE)
+1. Design client/server architecture
 
 ### Todo priority order
 
-1. BettingRound() engine ⭐ MOST IMPORTANT
-2. Showdown logic
-3. Blind logic
-4. Turn order logic
-5. Player input
-6. AI players
-7. Side pots (advanced)
-8. All-in logic (advanced)
+1. Side pots (advanced)
+2. All-in logic (advanced)

@@ -27,7 +27,7 @@ public class Interface
     {
         Console.Clear();
         Console.ForegroundColor = ConsoleColor.DarkGreen;
-        Console.WriteLine($"Pot: {Table.Pot}      ***{Table.RoundEngine.roundState}*** ");
+        Console.WriteLine($"Pot: {Table.Pot}      ***{Table.RoundEngine.roundState}***  Button:{Table.ButtonPosition}");
         Console.ForegroundColor = ConsoleColor.Gray;
 
         //draw board and board cards
