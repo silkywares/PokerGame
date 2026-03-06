@@ -19,15 +19,61 @@ class Server
 
         while (true)
         {
-            TcpClient client = listener.AcceptTcpClient(); //find someone trying to connect and designates them as listener
-            Console.WriteLine("Client connected");
+            var client = listener.AcceptTcpClient();
+            var stream = client.GetStream();
 
-            NetworkStream stream = client.GetStream();
+            
+            byte[] buffer = new byte[1024]; // reuse buffer for this client
+            
+            int bytesRead = stream.Read(buffer, 0, buffer.Length);
+            string name = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+            
+            Console.ForegroundColor = ConsoleColor.DarkCyan;
+            Console.WriteLine($"{name} connected.");
 
-            byte[] message = Encoding.UTF8.GetBytes("Connected to Poker Server\n");
-            stream.Write(message, 0, message.Length);
+            try
+            {
+                while (true) // handle messages from this client
+                {
+                    bytesRead = stream.Read(buffer, 0, buffer.Length);
 
-            client.Close();
+                    if (bytesRead == 0) // client disconnected normally
+                    {
+                        Console.WriteLine($"{name} disconnected normally.");
+                        break;
+                    }
+
+                    string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+
+                    Console.ForegroundColor = ConsoleColor.DarkCyan;
+                    Console.Write($"{name}: ");
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine(message);
+
+                    // send response
+                    byte[] responseBytes = Encoding.UTF8.GetBytes("Received");
+                    stream.Write(responseBytes, 0, responseBytes.Length);
+                    
+                    if (message.Trim().ToLower() == "end")
+                        break; // client wants to end
+                }
+            }
+            catch (Exception e)
+            {
+                Console.ForegroundColor = ConsoleColor.DarkYellow;
+
+                Console.WriteLine($"{name} disconnected unexpectedly: " + e.Message);
+                Console.ForegroundColor = ConsoleColor.White;
+
+            }
+            finally
+            {
+                // ensure the client is always closed
+                Console.ForegroundColor = ConsoleColor.White;
+                stream.Close();
+                client.Close();
+            }
         }
+        
     }
 }
