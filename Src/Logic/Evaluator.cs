@@ -110,19 +110,13 @@ public class Evaluator
 
         switch (results[0].Evaluation.Rank)
         {
-            case (int)HandRank.StraightFlush:
-                maxPrimary = results.Max(p => p.Evaluation.PrimaryValue);
-                topPlayers = topPlayers
-                    .Where(c => c.Evaluation.PrimaryValue == maxPrimary)
-                    .ToList();
-                break;
+            case (int)HandRank.HighCard:
+            case (int)HandRank.OnePair:
+            case (int)HandRank.ThreeOfAKind:
             case (int)HandRank.FourOfAKind:
-                maxPrimary = results.Max(p => p.Evaluation.PrimaryValue);
-                topPlayers = topPlayers
-                    .Where(c => c.Evaluation.PrimaryValue == maxPrimary)
-                    .ToList();
-                break;
             case (int)HandRank.Straight:
+            case (int)HandRank.Flush:
+            case (int)HandRank.StraightFlush:
                 maxPrimary = results.Max(p => p.Evaluation.PrimaryValue);
                 topPlayers = topPlayers
                     .Where(c => c.Evaluation.PrimaryValue == maxPrimary)
@@ -138,18 +132,6 @@ public class Evaluator
                     .Where(c => c.Evaluation.SecondaryValue == maxSecondary)
                     .ToList();
                 break;
-            case (int)HandRank.ThreeOfAKind:
-                maxPrimary = results.Max(p => p.Evaluation.PrimaryValue);
-                topPlayers = topPlayers
-                    .Where(c => c.Evaluation.PrimaryValue == maxPrimary)
-                    .ToList();
-                break;
-            case (int)HandRank.Flush:
-                maxPrimary = results.Max(p => p.Evaluation.PrimaryValue);
-                topPlayers = topPlayers
-                    .Where(c => c.Evaluation.PrimaryValue == maxPrimary)
-                    .ToList();
-                break;
             case (int)HandRank.TwoPair:
                 maxPrimary = results.Max(p => p.Evaluation.PrimaryValue);
                 topPlayers = topPlayers
@@ -158,18 +140,6 @@ public class Evaluator
                 maxSecondary = results.Max(p => p.Evaluation.SecondaryValue);
                 topPlayers = topPlayers
                     .Where(c => c.Evaluation.SecondaryValue == maxSecondary)
-                    .ToList();
-                break;
-            case (int)HandRank.OnePair:
-                maxPrimary = results.Max(p => p.Evaluation.PrimaryValue);
-                topPlayers = topPlayers
-                    .Where(c => c.Evaluation.PrimaryValue == maxPrimary)
-                    .ToList();
-                break;
-            case (int)HandRank.HighCard:
-                maxPrimary = results.Max(p => p.Evaluation.PrimaryValue);
-                topPlayers = topPlayers
-                    .Where(c => c.Evaluation.PrimaryValue == maxPrimary)
                     .ToList();
                 break;
         }

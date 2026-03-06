@@ -21,9 +21,7 @@ public class Dealer
         for(int i=0; i<2; i++)
         {
             foreach(Player p in players)
-            {
-            p.AddCard(Deck.Deal());
-            }
+                p.AddCard(Deck.Deal());
         }
     }
     public void DealBoardCards()

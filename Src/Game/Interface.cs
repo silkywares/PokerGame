@@ -27,7 +27,7 @@ public class Interface
     {
         Console.Clear();
         Console.ForegroundColor = ConsoleColor.DarkGreen;
-        Console.WriteLine($"***{Table.RoundEngine.roundState}*** Pot: {Table.Pot}");
+        Console.WriteLine($"Pot: {Table.Pot}      ***{Table.RoundEngine.roundState}*** ");
         Console.ForegroundColor = ConsoleColor.Gray;
 
         //draw board and board cards
@@ -91,7 +91,6 @@ public class Interface
             Console.WriteLine($"{i}: {o.Action}{callAmount}{raiseRange}");
         }
     }
-
 
     public void PopulateChat()
     {
