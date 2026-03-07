@@ -39,7 +39,7 @@ public class RoundEngine
         if(toCall == 0)
             actions.Add(new PlayerActionOption{Action = PlayerAction.Check}); 
         //call 
-        if(player.ChipCount >= toCall)
+        if(player.ChipCount >= toCall && toCall != 0)
             actions.Add(new PlayerActionOption{Action = PlayerAction.Call, Amount = CurrentBet-player.CurrentBet});
         //raise
         if (player.ChipCount > toCall)
@@ -174,7 +174,7 @@ public class RoundEngine
         CurrentBet = Table.BigBlind;
     }
     
-    private void StartBettingRound(RoundState street)
+    private async Task StartBettingRound(RoundState street)
     {
 
         Console.WriteLine($"Begin {street} betting round");
@@ -204,6 +204,7 @@ public class RoundEngine
             if (!currentPlayer.IsFolded && !currentPlayer.IsAllIn)
             {   
                 Interface.PrintTable();
+                var action = await currentPlayer.GetAction(actions);
                 ProcessManualAction(currentPlayer);
                 currentPlayer.HasActedThisRound = true;
             }

@@ -10,6 +10,7 @@ public class Player
     public bool IsFolded { get; set; }
     public bool IsAllIn {get; set;}
     public bool HasActedThisRound {get; set;}
+    public PlayerConnection PlayerConnection;
 
     public Player(string name, int seat, int chips)
     {

@@ -74,7 +74,7 @@ class Server
     }
     
 
-    void QueryPlayerAction(NetworkStream stream, List<RoundEngine.PlayerAction> actions)
+    public void QueryPlayerAction(NetworkStream stream, List<RoundEngine.PlayerAction> actions)
     {
         ///Send the player the avaialable actions from RoundEngine.OfferPlayerActions
         
