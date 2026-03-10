@@ -4,12 +4,16 @@ using System.Text;
 
 namespace PokerGame;
 
-class PlayerConnection
-{
-    
-    TcpClient client;
-    NetworkStream stream;
+public class PlayerConnection
+{ 
+    public TcpClient client;
+    public NetworkStream stream;
 
+    public PlayerConnection(TcpClient client)
+    {
+        this.client = client;
+        stream = client.GetStream();
+    }
     public async Task<string> Receive()
     {
         byte[] buffer = new byte[1024];
@@ -22,10 +26,5 @@ class PlayerConnection
         byte[] data = Encoding.UTF8.GetBytes(message);
         await stream.WriteAsync(data);
     }
-    public PlayerConnection(TcpClient client)
-    {
-        this.client = client;
-        stream = client.GetStream();
-        
-    }
+
 }

@@ -10,16 +10,18 @@ public class Table
     public int SmallBlind { get; }
     public int BigBlind => SmallBlind * 2;
 
-    public Table(List<Player> players)
+    public Table(List<Player>? players)
     {
-        Players = players;
+        Players = new List<Player>();
         Pot = 0;
         Dealer = new Dealer();
         RoundEngine = new RoundEngine(this);
         ButtonPosition = 0;
         SmallBlind = 2;
+        if(players != null)
+            Players = players;
     }
-    void AddPlayer(Player p)
+    public void AddPlayer(Player p)
     {
         if(Players.Count < 6)
         {
@@ -27,5 +29,21 @@ public class Table
         }
         else
             Console.Write("Table full");
+    }
+    public void RemovePlayer(Player p)
+    {
+        Players.Remove(p);
+    }
+
+    public void TestTable()
+    {
+        //Player p1 = new Player("Luis", 1, 100, null);
+        //Player p2 = new Player("Mom ", 2, 100, null);
+        //AddPlayer(p1);
+        //AddPlayer(p2);
+        //Dealer.DealPlayerCards(Players);
+        Dealer.DealBoardCards();
+        Dealer.DealBoardCards();
+        Dealer.DealBoardCards();
     }
 }

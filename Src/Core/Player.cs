@@ -1,3 +1,5 @@
+using System.Net.Sockets;
+
 namespace PokerGame;
 
 public class Player
@@ -10,15 +12,19 @@ public class Player
     public bool IsFolded { get; set; }
     public bool IsAllIn {get; set;}
     public bool HasActedThisRound {get; set;}
-    public PlayerConnection PlayerConnection;
+    public PlayerConnection? PlayerConnection;
 
-    public Player(string name, int seat, int chips)
+    public Player(string name, int seat, int chips, PlayerConnection? playerConnection)
     {
         Hand = new List<Card>();
         Name = name;
         SeatPosition = seat;
         ChipCount = chips;
+
+        if(playerConnection != null)
+            PlayerConnection = playerConnection;
     }
+    
 
     public void AddCard(Card card)
     {
@@ -52,4 +58,11 @@ public class Player
         //fold
     }
     
+    public static string RName()
+    {
+        TestNames[] values = (TestNames[])Enum.GetValues(typeof(TestNames));
+        var rand = new Random();
+        TestNames name = values[rand.Next(values.Length)];
+        return name.ToString();
+    }
 }

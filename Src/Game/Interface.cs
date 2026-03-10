@@ -4,9 +4,9 @@ public class Interface
 {
     //RoundEngine RoundEngine;
     Table Table;
-    int colonOffset = 9;
-    int chipOffset = 6;
-    int chatOffset = 40;
+    static int colonOffset = 9;
+    static int chipOffset = 6;
+    static int chatOffset = 40;
     
     public Interface(Table table)
     {
@@ -23,7 +23,49 @@ public class Interface
             Console.Write(new string(' ', Console.WindowWidth));
         }
     }
-     public void PrintTable()
+    static public void PrintTable(TableDTO tableDTO)
+    {
+        Console.Clear();
+        Console.ForegroundColor = ConsoleColor.DarkGreen;
+        Console.WriteLine($"Pot: {tableDTO.Pot}      ***{tableDTO.roundState}***  Button:{tableDTO.ButtonPosition}");
+        Console.ForegroundColor = ConsoleColor.Gray;
+
+        //draw board and board cards
+        Console.ForegroundColor = ConsoleColor.DarkCyan;
+        Console.Write("Board    : ");
+        foreach (Card c in tableDTO.Board)
+            c.PrintCard();
+
+        Console.WriteLine();
+        
+        //PRINT PLAYERS
+        for (int i = 0; i < tableDTO.Players.Count; i++)
+        {
+            // Highlight current player directly
+            
+            if (i == tableDTO.TurnIndex && !tableDTO.Players[i].IsFolded)
+                Console.BackgroundColor = ConsoleColor.DarkMagenta;
+            else if (tableDTO.Players[i].IsFolded)
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+            else
+                Console.ForegroundColor = ConsoleColor.Blue;
+            
+            Console.Write($"{tableDTO.Players[i].Name}");
+            Console.ResetColor();
+            Console.ForegroundColor = ConsoleColor.Blue;
+            var cursorPos = Console.GetCursorPosition();
+            Console.SetCursorPosition(chipOffset, cursorPos.Top);
+            Console.Write($"{tableDTO.Players[i].ChipCount}");
+            Console.SetCursorPosition(colonOffset, cursorPos.Top);
+            Console.Write(": ");
+            
+            if( i == tableDTO.RecevingPlayerSeatPos)
+            foreach (Card c in tableDTO.Hand)
+                c.PrintCard();
+            Console.WriteLine();      
+        }
+    }
+    public void PrintTable()
     {
         Console.Clear();
         Console.ForegroundColor = ConsoleColor.DarkGreen;
@@ -63,9 +105,6 @@ public class Interface
         }
 
         //print chat
-        
-
-        
     }
     public void WaitForSpacebar()
     {

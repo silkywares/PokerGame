@@ -204,7 +204,7 @@ public class RoundEngine
             if (!currentPlayer.IsFolded && !currentPlayer.IsAllIn)
             {   
                 Interface.PrintTable();
-                var action = await currentPlayer.GetAction(actions);
+                //var action = await currentPlayer.GetAction(actions);
                 ProcessManualAction(currentPlayer);
                 currentPlayer.HasActedThisRound = true;
             }
