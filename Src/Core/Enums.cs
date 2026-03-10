@@ -7,4 +7,4 @@ public enum RoundState { Preflop, Flop, Turn, River, Reset, Showdown, CannotStar
 public enum MessageType : byte { Handshake = 1, TableState = 2,  ActionRequest = 3, ActionResponse = 4, Chat = 5, Ack = 6}
 public enum PlayerAction : byte  {Call = 1, Raise = 2, Fold = 3, Check = 4 , AllIn = 5};
 
-public enum TestNames { Luis, Dean, Mike, Zane, Raul, Blad, Chid, Spuf, Reib, Whud}
+public enum TestNames { Luis, Dean, Mike, Zane, Raul, Blad, Chid, Spuf, Reib, Lars}

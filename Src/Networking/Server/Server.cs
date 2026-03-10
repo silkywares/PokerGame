@@ -165,7 +165,39 @@ class Server
     async Task PrintPlayersLoop()
     {
         int lastActiveClients = ActiveClients;
-        
+
+
+var testOptions = new List<RoundEngine.PlayerActionOption>
+{
+    new RoundEngine.PlayerActionOption
+    {
+        Action = PlayerAction.Fold,
+        Amount = 0,
+        MinAmount = 0,
+        MaxAmount = 0
+    },
+    new RoundEngine.PlayerActionOption
+    {
+        Action = PlayerAction.Call,
+        Amount = 50,
+        MinAmount = 50,
+        MaxAmount = 50
+    },
+    new RoundEngine.PlayerActionOption
+    {
+        Action = PlayerAction.Raise,
+        Amount = 100,
+        MinAmount = 100,
+        MaxAmount = 200
+    },
+    new RoundEngine.PlayerActionOption
+    {
+        Action = PlayerAction.Check,
+        Amount = 0,
+        MinAmount = 0,
+        MaxAmount = 0
+    }
+};
         while (true)
         {
             await Task.Delay(500);
@@ -179,7 +211,7 @@ class Server
                 {
                     Console.WriteLine($"{p.Name}");
                     SendClientTable(p);
-                    //SendActions(p, testOptions);
+                    SendActions(p, testOptions);
                 }
                 Console.WriteLine("--------------------------");
                 Console.ForegroundColor = ConsoleColor.Gray;

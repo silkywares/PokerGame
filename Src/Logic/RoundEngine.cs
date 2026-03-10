@@ -24,7 +24,7 @@ public class RoundEngine
         public int MinAmount; // for Raise/Bet
         public int MaxAmount; // for Raise/Bet
     }
-    
+
     public List<PlayerActionOption> GetRoundActions(Player player)
     {
         //this function checks the game state and assembles a list of valid actions a user can take
@@ -312,7 +312,7 @@ public class RoundEngine
             Thread.Sleep(700);
         }
     }
-    public void Roundflow()
+    public async Task Roundflow()
     {
         while(true)
         {
@@ -323,51 +323,55 @@ public class RoundEngine
                 Interface.PrintTable();
                 CannotStart();
                 roundState = RoundState.Preflop;
-                Thread.Sleep(1000);
+                await Task.Delay(1000);
                 break; 
             case RoundState.Preflop:
                 Table.Dealer.DealPlayerCards(GetActivePlayers());
                 Interface.PrintTable();
                 PostBlinds();
                 roundState = RoundState.Flop;
-                StartBettingRound(RoundState.Preflop);
-                Thread.Sleep(1000);
+
+                await StartBettingRound(RoundState.Preflop);
+                await Task.Delay(1000);
                 break;
             case RoundState.Flop:
                 Table.Dealer.DealBoardCards();
                 Interface.PrintTable();
                 ResetStreetBets();                
                 roundState = RoundState.Turn;
-                StartBettingRound(RoundState.Flop);
-                Thread.Sleep(1000);
+
+                await StartBettingRound(RoundState.Flop);
+                await Task.Delay(1000);
                 break;
             case RoundState.Turn:
                 Table.Dealer.DealBoardCards();
                 Interface.PrintTable();
                 ResetStreetBets();
                 roundState = RoundState.River;
-                StartBettingRound(RoundState.Turn);
-                Thread.Sleep(1000);
+
+                await StartBettingRound(RoundState.Turn);
+                await Task.Delay(1000);
                 break;
             case RoundState.River:
                 Table.Dealer.DealBoardCards();
                 Interface.PrintTable();
                 ResetStreetBets();
                 roundState = RoundState.Showdown;
-                StartBettingRound(RoundState.River);
-                Thread.Sleep(1000);
+                
+                await StartBettingRound(RoundState.River);
+                await Task.Delay(1000);
                 break;
             case RoundState.Showdown:
                 AllocatePot();
                 roundState = RoundState.Reset;
-                Thread.Sleep(1000);
+                await Task.Delay(1000);
                 break;
             case RoundState.Reset:
                 Console.WriteLine($"{roundState}");
                 roundState = RoundState.Preflop;
                 Reset();
                 Interface.PrintTable();
-                Thread.Sleep(1000);
+                await Task.Delay(1000);
                 break;
             }   
         } 

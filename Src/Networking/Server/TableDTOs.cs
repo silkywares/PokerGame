@@ -16,7 +16,7 @@ public class TableDTO
 
 public class PlayerInfo
 {
-    public string Name { get; set; }
+    public string? Name { get; set; }
     public int ChipCount { get; set; }
     public bool IsFolded { get; set; }
     public bool IsAllIn { get; set; }

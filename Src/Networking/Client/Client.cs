@@ -5,7 +5,7 @@ using PokerGame.DTOs;
 using System.Text.Json;
 
 
-namespace Pokergame;
+namespace PokerGame;
 
 class Client
 {

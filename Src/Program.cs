@@ -1,10 +1,4 @@
-﻿using System.Collections;
-using System.Drawing;
-using System.Reflection.Metadata;
-using System.Runtime.InteropServices;
-using Pokergame;
-
-namespace PokerGame;
+﻿namespace PokerGame;
 
 class Program
 {
@@ -34,8 +28,7 @@ class Program
 
         Console.ResetColor();
 
-        table.RoundEngine.Roundflow();
-
+        await table.RoundEngine.Roundflow();
     }
 }
 
