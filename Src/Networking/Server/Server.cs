@@ -3,31 +3,14 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 
+using PokerGame.DTOs;
+
 namespace PokerGame;
 
 
-public class TableDTO
-{
-    public int RecevingPlayerSeatPos { get; set; } = new();
-    public List<Card> Board { get; set; } = new();
-    public int Pot { get; set; } = new();
-    public RoundEngine.RoundState roundState { get; set; } = new();
-    public int TurnIndex { get; set; } = new();
-    public List<Card> Hand { get; set; } = new();
-    public List<PlayerInfo> Players { get; set; } = new();
-    public int ButtonPosition {get; set;} = new();
-    
-}
-public class PlayerInfo
-{
-    public string Name { get; set; }
-    public int ChipCount { get; set; }
-    public bool IsFolded { get; set; }
-    public bool IsAllIn { get; set; }
-}
-
 class Server
 {
+    
     Table ServerTable = new Table(null);
     List<Player>? Players;
     TcpListener Listener;
@@ -39,6 +22,7 @@ class Server
         Port = port;
         Listener = new TcpListener(IPAddress.Any, port);
         Listener.Start();
+        //TESTING
 
     }
 
@@ -116,50 +100,52 @@ class Server
             Console.WriteLine($"{player.Name} disconnected. Active clients: {ActiveClients}");
         }
     }
-    async Task SendAck(Player player, string message = "Received")
+    
+    static async Task SendMessageAsync<T>(Player player, MessageType type, T dto)
     {
-        byte[] payload = Encoding.UTF8.GetBytes(message);
-        byte[] framedMessage = new byte[1 + 4 + payload.Length];
-        framedMessage[0] = (byte)MessageType.Ack;
-        Array.Copy(BitConverter.GetBytes(payload.Length), 0, framedMessage, 1, 4);
-        Array.Copy(payload, 0, framedMessage, 5, payload.Length);
-
-        await player.PlayerConnection!.stream.WriteAsync(framedMessage, 0, framedMessage.Length);
-    }
-    void SendHandshake(Player player)
-    {
-        byte[] payload = Encoding.UTF8.GetBytes(player.Name);
+        ///Generalized Message serialization and framing
+        string json = JsonSerializer.Serialize(dto);
+        byte[] payload = Encoding.UTF8.GetBytes(json);
+        byte[] lengthPrefix = BitConverter.GetBytes(payload.Length);
         byte[] message = new byte[1 + 4 + payload.Length];
-        message[0] = (byte)MessageType.Handshake;
-        Array.Copy(BitConverter.GetBytes(payload.Length), 0, message, 1, 4);
+
+        message[0] = (byte)type;
+        Array.Copy(lengthPrefix, 0, message, 1, 4);
         Array.Copy(payload, 0, message, 5, payload.Length);
 
-        _ = player.PlayerConnection!.stream.WriteAsync(message, 0, message.Length);
+        await player.PlayerConnection!.stream.WriteAsync(message, 0, message.Length);
     }
-    public void QueryPlayerAction(Player player, List<RoundEngine.PlayerAction> actions)
+    async Task SendAck(Player player, string message = "Received")
+    {
+        await SendMessageAsync(player, MessageType.Ack, message);
+    }
+    async void SendHandshake(Player player)
+    {
+        await SendMessageAsync(player, MessageType.Handshake, player.Name);
+    }
+
+    async void SendActions(Player player, List<RoundEngine.PlayerActionOption> actions)
     {
         ///Send the player the avaialable actions from RoundEngine.OfferPlayerActions
-        
-        var response = SendPlayerActions(player, actions);
-        if (ValidateAction(actions, response) ? true : false);
-        //update the roundEngine       
+        ActionsDTO dto = new ActionsDTO
+        {
+            Options = actions.Select(a => new PlayerActionOptionsDTO
+            {
+                Action = a.Action,
+                Amount = a.Amount,
+                MinAmount = a.MinAmount,
+                MaxAmount = a.MaxAmount
+            }).ToList()
+        };
+        await SendMessageAsync(player, MessageType.ActionRequest, dto);
     }
-    int SendPlayerActions(Player player, List<RoundEngine.PlayerAction> actions)
-    {
-        ///Send the player the avaialable actions from RoundEngine.OfferPlayerActions
-        int clientResponse = -1;
-        //stream.WriteAsync();
-        return clientResponse;
-        
-    }
-    bool ValidateAction(List<RoundEngine.PlayerAction> sentAction, int action)
+    bool ValidateAction(List<RoundEngine.PlayerActionOption> sentAction, int action)
     {
         /// Takes in the sent action list to the player and checks that the returned action choice from the player is among the sent actions.
-        
         return false;
     }
 
-    void SendClientTable(Player player)
+    async void SendClientTable(Player player)
     {
         var tableState = new
         {
@@ -174,28 +160,12 @@ class Server
 
         };
 
-
-        //message will send 1 byte first to indicate message type, 
-        // then 4 bytes for the JSON length, then the JSON message
-        string json = JsonSerializer.Serialize(tableState);
-        byte[] data = Encoding.UTF8.GetBytes(json);
-            
-        byte[] lengthPrefix = BitConverter.GetBytes(data.Length);
-        byte[] message = new byte[1 + 4 + data.Length]; //(message type[1] + message length[4] + message[n])
-
-        message[0] = (byte)MessageType.TableState; //set message type
-        Array.Copy(lengthPrefix, 0, message, 1, 4);//set message length
-        Array.Copy(data, 0, message, 5, data.Length);//set message
-
-        //DEBUGING
-        //Console.WriteLine("JSON being sent:");
-        //Console.WriteLine(json);
-
-        _ = player.PlayerConnection!.stream.WriteAsync(message, 0, message.Length);
+        await SendMessageAsync(player, MessageType.TableState, tableState);
     }
     async Task PrintPlayersLoop()
     {
         int lastActiveClients = ActiveClients;
+        
         while (true)
         {
             await Task.Delay(500);
@@ -209,6 +179,7 @@ class Server
                 {
                     Console.WriteLine($"{p.Name}");
                     SendClientTable(p);
+                    //SendActions(p, testOptions);
                 }
                 Console.WriteLine("--------------------------");
                 Console.ForegroundColor = ConsoleColor.Gray;
@@ -217,9 +188,6 @@ class Server
         }
     }
 
-    
-    
-    
     public async Task StartAsync(int port)
     {
         Console.Clear();
@@ -227,6 +195,7 @@ class Server
         Console.WriteLine("Server starting...");
         Console.WriteLine($"Server listening on port {port}");
         Console.ForegroundColor = ConsoleColor.Gray;
+
         _ = PrintPlayersLoop();   // fire and forget
         await ClientManager();
     }

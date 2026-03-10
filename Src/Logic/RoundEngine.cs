@@ -2,8 +2,6 @@ namespace PokerGame;
 
 public class RoundEngine
 {
-    public enum RoundState { Preflop, Flop, Turn, River, Reset, Showdown, CannotStart}
-    public enum PlayerAction  {Call, Raise, Fold, Check, AllIn};
     public Interface Interface;
     public int turnIndex{get; set;} // current actioning player
     private int firstToAct;//first player to act in betting round
@@ -25,8 +23,8 @@ public class RoundEngine
         public int Amount;    // for Call
         public int MinAmount; // for Raise/Bet
         public int MaxAmount; // for Raise/Bet
-
     }
+    
     public List<PlayerActionOption> GetRoundActions(Player player)
     {
         //this function checks the game state and assembles a list of valid actions a user can take

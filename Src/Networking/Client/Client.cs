@@ -1,7 +1,9 @@
 using System.Net.Sockets;
 using System.Text;
 using PokerGame;
+using PokerGame.DTOs;
 using System.Text.Json;
+
 
 namespace Pokergame;
 
@@ -80,7 +82,9 @@ class Client
                 // handle chat
                 break;
             case MessageType.ActionRequest:
-                //handle action request
+                var ActionRequest = JsonSerializer.Deserialize<ActionsDTO>(json) 
+                    ?? throw new Exception("Invalid Action Table state received");
+                Interface.PrintPlayerOptions(ActionRequest);
                 break;
         }
     }
@@ -100,13 +104,13 @@ class Client
     }
     static async Task ReceiveLoop()
     {
+        // this function runs continuously enabling continuous and asyncronous message reception
         try
         {
             while (true)
-            {
                 await ReceiveMessage();
-            }
         }
+
         catch (Exception e)
         {
             Console.WriteLine($"Disconnected from server: {e.Message}");

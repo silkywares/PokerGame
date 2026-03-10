@@ -1,3 +1,5 @@
+using PokerGame.DTOs;
+
 namespace PokerGame;
 
 public class Interface
@@ -106,6 +108,33 @@ public class Interface
 
         //print chat
     }
+    public void PrintPlayerOptions(Player player, List<RoundEngine.PlayerActionOption> options)
+    {
+        ///for use 
+        Console.WriteLine($"\n--- ACTION FOR {player.Name} ---");
+        Console.WriteLine($"CurrentBet: {Table.RoundEngine.CurrentBet} | PlayerBet: {player.CurrentBet} | Chips: {player.ChipCount}");
+
+        //print out options
+        for (int i = 0; i < options.Count; i++)
+        {
+            var o = options[i];
+            string raiseRange = o.Action == PlayerAction.Raise ? $" (Min:{o.MinAmount}, Max:{o.MaxAmount})" : "";
+            string callAmount = o.Action == PlayerAction.Call ? $" {o.Amount}" : "";
+            Console.WriteLine($"{i}: {o.Action}{callAmount}{raiseRange}");
+        }
+    }
+    static public void PrintPlayerOptions(ActionsDTO dto)
+    {
+        ///for client use
+        for (int i = 0; i < dto.Options.Count; i++)
+        {
+            var o = dto.Options[i];
+            string raiseRange = o.Action == PlayerAction.Raise ? $" (Min:{o.MinAmount}, Max:{o.MaxAmount})" : "";
+            string callAmount = o.Action == PlayerAction.Call ? $" {o.Amount}" : "";
+            Console.WriteLine($"{i}: {o.Action}{callAmount}{raiseRange}");
+        }
+    }
+
     public void WaitForSpacebar()
     {
         Console.WriteLine("\nPress SPACE to continue...");
@@ -116,21 +145,6 @@ public class Interface
             key = keyInfo.Key;
         } while (key != ConsoleKey.Spacebar);
     }
-    public void PrintPlayerOptions(Player player, List<RoundEngine.PlayerActionOption> options)
-    {
-        Console.WriteLine($"\n--- ACTION FOR {player.Name} ---");
-        Console.WriteLine($"CurrentBet: {Table.RoundEngine.CurrentBet} | PlayerBet: {player.CurrentBet} | Chips: {player.ChipCount}");
-
-        //print out options
-        for (int i = 0; i < options.Count; i++)
-        {
-            var o = options[i];
-            string raiseRange = o.Action == RoundEngine.PlayerAction.Raise ? $" (Min:{o.MinAmount}, Max:{o.MaxAmount})" : "";
-            string callAmount = o.Action == RoundEngine.PlayerAction.Call ? $" {o.Amount}" : "";
-            Console.WriteLine($"{i}: {o.Action}{callAmount}{raiseRange}");
-        }
-    }
-
     public void PopulateChat()
     {
         Console.SetCursorPosition(chatOffset,1);
